@@ -1,0 +1,14 @@
+{
+  "name": "devsecops-demo",
+  "version": "1.0.0",
+  "description": "Deliberately vulnerable app for MDC demo",
+  "main": "server.js",
+  "dependencies": {
+    "express": "4.17.1",
+    "mysql": "2.18.1",
+    "n8n": "1.0.0",
+    "lodash": "4.17.20",
+    "jsonwebtoken": "8.5.1",
+    "axios": "0.21.1"
+  }
+}
