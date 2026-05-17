@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const { AzureOpenAI } = require('openai');
-const { DefaultAzureCredential, getBearerTokenProvider } = require('@azure/identity');
+const { DefaultAzureCredential } = require('@azure/identity');
 
 const app = express();
 app.use(express.json());
@@ -27,7 +27,12 @@ async function getOpenAIClient() {
     // Primary: use workload identity (managed identity)
     const credential = new DefaultAzureCredential();
     const scope = 'https://cognitiveservices.azure.com/.default';
-    const azureADTokenProvider = getBearerTokenProvider(credential, scope);
+
+    // Create a token provider function compatible with openai SDK
+    const azureADTokenProvider = async () => {
+      const token = await credential.getToken(scope);
+      return token.token;
+    };
 
     openaiClient = new AzureOpenAI({
       azureADTokenProvider,
