@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const { AzureOpenAI } = require('openai');
-const { DefaultAzureCredential } = require('@azure/identity');
+const { WorkloadIdentityCredential } = require('@azure/identity');
 
 const app = express();
 app.use(express.json());
@@ -25,7 +25,11 @@ async function getOpenAIClient() {
 
   try {
     // Primary: use workload identity (managed identity)
-    const credential = new DefaultAzureCredential();
+    const credential = new WorkloadIdentityCredential({
+      clientId: process.env.AZURE_CLIENT_ID,
+      tenantId: process.env.AZURE_TENANT_ID,
+      tokenFilePath: process.env.AZURE_FEDERATED_TOKEN_FILE,
+    });
     const scope = 'https://cognitiveservices.azure.com/.default';
 
     // Create a token provider function compatible with openai SDK
