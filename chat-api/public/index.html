@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CNAPP Demo — AI Chat</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; height: 100vh; display: flex; flex-direction: column; }
+    .header { background: #1e293b; padding: 16px 24px; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 12px; }
+    .header h1 { font-size: 18px; font-weight: 600; }
+    .header .badge { background: #dc2626; color: white; font-size: 11px; padding: 2px 8px; border-radius: 12px; }
+    .chat-container { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+    .message { max-width: 75%; padding: 12px 16px; border-radius: 12px; line-height: 1.5; font-size: 14px; }
+    .message.user { align-self: flex-end; background: #2563eb; color: white; border-bottom-right-radius: 4px; }
+    .message.assistant { align-self: flex-start; background: #1e293b; border: 1px solid #334155; border-bottom-left-radius: 4px; }
+    .message.error { align-self: flex-start; background: #7f1d1d; border: 1px solid #dc2626; }
+    .message .meta { font-size: 11px; color: #94a3b8; margin-top: 6px; }
+    .input-area { background: #1e293b; padding: 16px 24px; border-top: 1px solid #334155; display: flex; gap: 12px; }
+    .input-area input { flex: 1; background: #0f172a; border: 1px solid #334155; color: #e2e8f0; padding: 12px 16px; border-radius: 8px; font-size: 14px; outline: none; }
+    .input-area input:focus { border-color: #2563eb; }
+    .input-area button { background: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 500; }
+    .input-area button:hover { background: #1d4ed8; }
+    .input-area button:disabled { background: #334155; cursor: not-allowed; }
+    .typing { color: #94a3b8; font-style: italic; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>CNAPP Demo — AI Chat</h1>
+    <span class="badge">VULNERABLE</span>
+    <span style="color:#94a3b8; font-size:12px; margin-left:auto;">Powered by Azure OpenAI (gpt-4.1-mini)</span>
+  </div>
+
+  <div class="chat-container" id="chat">
+    <div class="message assistant">
+      Welcome! I'm an AI assistant running on AKS, connected to Azure OpenAI via workload identity. This app is <strong>deliberately vulnerable</strong> for the CNAPP security demo.<br><br>
+      Try asking me anything, or check the security findings in Microsoft Defender for Cloud.
+    </div>
+  </div>
+
+  <div class="input-area">
+    <input type="text" id="input" placeholder="Type a message..." autocomplete="off" />
+    <button id="send" onclick="sendMessage()">Send</button>
+  </div>
+
+  <script>
+    const chat = document.getElementById('chat');
+    const input = document.getElementById('input');
+    const sendBtn = document.getElementById('send');
+
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
+
+    async function sendMessage() {
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      addMessage(msg, 'user');
+      input.value = '';
+      sendBtn.disabled = true;
+
+      const typingEl = document.createElement('div');
+      typingEl.className = 'message assistant typing';
+      typingEl.textContent = 'Thinking...';
+      chat.appendChild(typingEl);
+      chat.scrollTop = chat.scrollHeight;
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg }),
+        });
+        const data = await res.json();
+        typingEl.remove();
+
+        if (res.ok) {
+          addMessage(data.reply, 'assistant', `${data.model} · ${data.usage?.total_tokens || '?'} tokens`);
+        } else {
+          addMessage(data.error || 'Something went wrong', 'error');
+        }
+      } catch (err) {
+        typingEl.remove();
+        addMessage('Network error: ' + err.message, 'error');
+      }
+      sendBtn.disabled = false;
+      input.focus();
+    }
+
+    function addMessage(text, type, meta) {
+      const el = document.createElement('div');
+      el.className = `message ${type}`;
+      el.textContent = text;
+      if (meta) {
+        const metaEl = document.createElement('div');
+        metaEl.className = 'meta';
+        metaEl.textContent = meta;
+        el.appendChild(metaEl);
+      }
+      chat.appendChild(el);
+      chat.scrollTop = chat.scrollHeight;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "chat-api",
+  "version": "1.0.0",
+  "description": "AI Chat API — deliberately vulnerable for MDC CNAPP demo",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "4.17.1",
+    "@azure/openai": "1.0.0-beta.12",
+    "@azure/identity": "3.3.0",
+    "axios": "0.21.1",
+    "lodash": "4.17.20",
+    "jsonwebtoken": "8.5.1",
+    "mysql": "2.18.1",
+    "ejs": "3.1.6"
+  }
+}
